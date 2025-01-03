@@ -49,7 +49,7 @@ jobs:
         cp Build/NX669J_12.1/DEBUG_GCC5/FV/SM8350.fd output/
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: edk2-boot-image
         path: output/SM8350.fd
