@@ -35,7 +35,6 @@ jobs:
         cd edk2
         git submodule update --init --recursive
 
-      
     - name: Build EDK2 for Qualcomm SM8350
       run: |
         cd edk2
@@ -53,5 +52,3 @@ jobs:
       with:
         name: edk2-boot-image
         path: output/SM8350.fd
-
-   
