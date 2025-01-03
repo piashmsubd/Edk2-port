@@ -1,12 +1,14 @@
-name: EDK2 Porting
+name: Build TWRP for REDMAGIC_6S_PRO
 
 on:
   push:
     branches:
       - main
+      - twrp-12.1
   pull_request:
     branches:
       - main
+      - twrp-12.1
 
 jobs:
   build:
@@ -16,44 +18,44 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Set up JDK
+      uses: actions/setup-java@v2
       with:
-        python-version: '3.9'
+        distribution: 'adopt'
+        java-version: '11'
 
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential
-        sudo apt-get install -y git
-        sudo apt-get install -y gcc-aarch64-linux-gnu
-        sudo apt-get install -y device-tree-compiler
+        sudo apt-get install -y bc bison build-essential curl flex g++-multilib gcc-multilib git \
+          gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool \
+          libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush \
+          rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
 
-    - name: Clone EDK2 repo
+    - name: Set up repo
       run: |
-        git clone https://github.com/piashmsubd/edk2.git
-        cd edk2
-        git submodule update --init --recursive
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo 'export PATH=~/bin:$PATH' >> ~/.bashrc
+        source ~/.bashrc
 
-    - name: Build EDK2 for Qualcomm SM8350
+    - name: Initialize repo
       run: |
-        cd edk2
-        source edksetup.sh
-        make -C BaseTools
-        build -a AARCH64 -t GCC5 -p Platforms/NX669J_12.1/NX669J_12.1.dsc
+        repo init -u https://github.com/piashmsubd/REDMAGIC_6S_PRO.git -b twrp-12.1
+        repo sync -j$(nproc --all)
 
-    - name: Package EDK2
+    - name: Build TWRP
+      env:
+        ALLOW_MISSING_DEPENDENCIES: true
+        LC_ALL: C
       run: |
-        mkdir -p output
-        cp Build/NX669J_12.1/DEBUG_GCC5/FV/SM8350.fd output/
+        source build/envsetup.sh
+        lunch twrp_YOUR_DEVICE-eng
+        make recoveryimage -j$(nproc --all)
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: edk2-boot-image
-        path: output/SM8350.fd
-        
-        
-        
-        
-    
+        name: twrp-recovery-image
+        path: out/target/product/YOUR_DEVICE/recovery.img
