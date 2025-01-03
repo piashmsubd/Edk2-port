@@ -42,7 +42,15 @@ jobs:
 
     - name: Initialize repo
       run: |
-        ~/bin/repo init -u https://github.com/piashmsubd/REDMAGIC_6S_PRO.git -b twrp-12.1
+        mkdir -p ~/workspace
+        cd ~/workspace
+        ~/bin/repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+        ~/bin/repo sync -j$(nproc --all)
+
+    - name: Clone device tree
+      run: |
+        cd ~/workspace
+        git clone https://github.com/piashmsubd/REDMAGIC_6S_PRO.git device/REDMAGIC_6S_PRO
         ~/bin/repo sync -j$(nproc --all)
 
     - name: Build TWRP
@@ -51,11 +59,11 @@ jobs:
         LC_ALL: C
       run: |
         source build/envsetup.sh
-        lunch twrp_YOUR_DEVICE-eng
+        lunch twrp_RED_MAGIC_6S_PRO-eng
         make recoveryimage -j$(nproc --all)
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: twrp-recovery-image
-        path: out/target/product/YOUR_DEVICE/recovery.img
+        path: out/target/product/REDMAGIC_6S_PRO/recovery.img
